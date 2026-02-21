@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <title>Creator Engine — Production Growth Console</title>
+  <style>
+    body{margin:0;font-family:Inter,system-ui,sans-serif;background:#0b1220;color:#e5e7eb}.wrap{max-width:1280px;margin:0 auto;padding:20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}.card{background:#111827;border:1px solid #1f2937;border-radius:14px;padding:14px}
+    input,textarea,button,select{width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e5e7eb}
+    button{background:#2563eb;border:none;cursor:pointer}.muted{color:#9ca3af;font-size:12px}pre{white-space:pre-wrap;background:#020617;padding:10px;border-radius:8px;max-height:260px;overflow:auto}
+    .row{display:flex;gap:8px}.kpi{font-size:24px;font-weight:700}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Creator Growth OS</h1>
+  <p class="muted">Production-grade implementation: funnel templates, bio-link templates, UTM attribution, dynamic segments, branching workflows, and send-time intelligence.</p>
+  <div class="grid">
+    <div class="card"><h3>Auth</h3>
+      <input id="email" value="creator@example.com"><input id="password" value="password123" type="password"><input id="display" value="Demo Creator">
+      <div class="row"><button onclick="register()">Register</button><button onclick="login()">Login</button></div>
+    </div>
+    <div class="card"><h3>Funnel Builder UI</h3>
+      <button onclick="loadFunnelTemplates()">Load Funnel Templates</button>
+      <select id="funnelTemplate"><option value="lead-magnet">lead-magnet</option><option value="webinar">webinar</option><option value="tripwire">tripwire</option></select>
+      <input id="funnelName" value="Prompt Funnel"><input id="funnelSlug" value="prompt-pro">
+      <textarea id="funnelBlocks">[{"title":"Hook","text":"Free value"},{"title":"Offer","text":"Join paid"}]</textarea>
+      <button onclick="createFunnel()">Create Funnel</button>
+    </div>
+    <div class="card"><h3>Bio-Link Templates</h3>
+      <button onclick="loadBioTemplates()">Load Bio Templates</button>
+      <select id="bioTemplate"><option value="minimal">minimal</option><option value="creator-pro">creator-pro</option><option value="neon">neon</option></select>
+      <input id="bioTitle" value="Creator Links"><input id="bioSlug" value="creator-links"><textarea id="bioLinks">[{"label":"Free Prompts","url":"/f/prompt-pro"}]</textarea>
+      <button onclick="createBio()">Create Bio Page</button>
+    </div>
+    <div class="card"><h3>Attribution Dashboard</h3>
+      <input id="source" value="instagram"><input id="medium" value="reel"><input id="campaign" value="jan-drop">
+      <button onclick="trackTraffic()">Track UTM Visit</button>
+      <button onclick="loadAttribution()">Load Attribution</button>
+      <div class="kpi" id="visitKpi">0</div><div class="muted">Visits</div>
+    </div>
+    <div class="card"><h3>Dynamic Segment Rule Builder</h3>
+      <button onclick="loadOperators()">Load Operators</button>
+      <input id="ruleName" value="trading-rule"><select id="comb"><option>AND</option><option>OR</option></select>
+      <textarea id="conditions">[{"field":"segment","op":"eq","value":"trading"},{"field":"source","op":"eq","value":"reel_1"}]</textarea>
+      <button onclick="createRule()">Create Rule</button><button onclick="previewRule()">Preview Rule</button>
+      <button onclick="createAudienceAndPush()">Create Audience+Push</button>
+    </div>
+    <div class="card"><h3>Branching Workflow Editor</h3>
+      <textarea id="workflowNodes">[{"id":"s","type":"start"},{"id":"v","type":"value"},{"id":"o","type":"offer"}]</textarea>
+      <textarea id="workflowEdges">[{"from":"s","to":"v","condition":"default"},{"from":"v","to":"o","condition":"if_clicked"}]</textarea>
+      <button onclick="createWorkflow()">Create Workflow</button>
+      <button onclick="simulateWorkflow()">Simulate Workflow</button>
+      <button onclick="bestTime()">Best Send-Time Recommendation</button>
+    </div>
+    <div class="card"><h3>Campaign</h3>
+      <button onclick="createAndSendCampaign()">Create + Send A/B Campaign</button>
+      <button onclick="runWorkers()">Run Workers</button>
+      <button onclick="loadPushAnalytics()">Push Analytics</button>
+    </div>
+
+    <div class="card"><h3>White-label & Plan Controls</h3>
+      <button onclick="loadPlans()">Load Plans</button>
+      <select id="planSelect"><option value="starter">starter</option><option value="growth">growth</option><option value="enterprise">enterprise</option></select>
+      <button onclick="upgradePlan()">Upgrade Plan</button>
+      <input id="brandApp" value="Creator OS"><input id="brandColor" value="#2563eb"><input id="brandLogo" value="https://cdn.example.com/logo.png">
+      <label class="muted"><input id="hidePowered" type="checkbox"/> Remove powered-by</label>
+      <button onclick="saveBranding()">Save Branding</button>
+      <input id="customDomain" value="creatorname.app">
+      <button onclick="provisionDomain()">Provision Domain</button>
+      <button onclick="verifyDomain()">Verify Domain</button>
+      <button onclick="listDomains()">List Domains</button>
+      <button onclick="checkRemovePoweredByFeature()">Check removePoweredBy Access</button>
+    </div>
+
+    <div class="card"><h3>Output</h3><pre id="out">Ready.</pre></div>
+  </div>
+</div>
+<script>
+let token='', creatorId='', audienceUserId='', ruleId='', workflowId='', campaignId='', domainId='';
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
+const out=v=>document.getElementById('out').textContent=JSON.stringify(v,null,2);
+async function api(path,m='GET',b){const r=await fetch(path,{method:m,headers:{'content-type':'application/json',...(token?{authorization:`Bearer ${token}`}:{})},body:b?JSON.stringify(b):undefined});const d=await r.json();if(!r.ok) throw new Error(JSON.stringify(d));out(d);return d;}
+const parse=(id)=>JSON.parse(document.getElementById(id).value);
+async function register(){const r=await api('/api/auth/register','POST',{email:email.value,password:password.value,displayName:display.value});token=r.token;creatorId=JSON.parse(atob(token.split('.')[0])).creatorId}
+async function login(){const r=await api('/api/auth/login','POST',{email:email.value,password:password.value});token=r.token;creatorId=JSON.parse(atob(token.split('.')[0])).creatorId}
+async function loadFunnelTemplates(){await api('/api/funnel/templates')}
+async function createFunnel(){await api('/api/funnels','POST',{name:funnelName.value,slug:funnelSlug.value,templateId:funnelTemplate.value,blocks:parse('funnelBlocks')})}
+async function loadBioTemplates(){await api('/api/bio-link/templates')}
+async function createBio(){await api('/api/bio-links','POST',{title:bioTitle.value,slug:bioSlug.value,template:bioTemplate.value,links:parse('bioLinks')})}
+async function createAudienceAndPush(){const r=await api('/api/audience','POST',{email:'fan@example.com',segment:'trading',source:'reel_1'});audienceUserId=r.audienceUserId;await api('/api/push/subscribe','POST',{audienceUserId,endpoint:'https://push.example/1',device:'android'})}
+async function trackTraffic(){await api('/api/traffic/track','POST',{creatorId,path:'/f/'+funnelSlug.value,source:source.value,medium:medium.value,campaign:campaign.value,utm:{utm_source:source.value,utm_medium:medium.value,utm_campaign:campaign.value},converted:false})}
+async function loadAttribution(){const r=await api('/api/attribution/dashboard');visitKpi.textContent=r.visits}
+async function loadOperators(){await api('/api/segments/operators')}
+async function createRule(){const r=await api('/api/segments/rules','POST',{name:ruleName.value,combinator:comb.value,conditions:parse('conditions')});ruleId=r.ruleId}
+async function previewRule(){await api('/api/segments/preview/'+ruleId)}
+async function createAndSendCampaign(){const c=await api('/api/campaigns','POST',{name:'AB Push',message:'Join now',segment:ruleName.value,variants:[{id:'A',message:'Free case study'},{id:'B',message:'Limited offer'}]});campaignId=c.campaignId;await api('/api/campaigns/'+campaignId+'/send','POST',{});await api('/api/push/events/open','POST',{campaignId,variantId:'A',audienceUserId,device:'android'});await api('/api/push/events/click','POST',{campaignId,variantId:'A',audienceUserId,device:'android'})}
+async function runWorkers(){await api('/api/workers/run','POST',{})}
+async function loadPushAnalytics(){await api('/api/push/analytics/'+campaignId)}
+async function createWorkflow(){const r=await api('/api/automations/workflows','POST',{name:'Welcome Branching',nodes:parse('workflowNodes'),edges:parse('workflowEdges')});workflowId=r.workflowId}
+async function simulateWorkflow(){await api('/api/automations/workflows/'+workflowId+'/simulate','POST',{context:{opened:true,clicked:true,purchased:false}})}
+async function bestTime(){await api('/api/intelligence/best-send-time')}
+
+async function loadPlans(){await api('/api/plans')}
+async function upgradePlan(){await api('/api/billing/upgrade-plan','POST',{plan:planSelect.value})}
+async function saveBranding(){await api('/api/branding/settings','POST',{appName:brandApp.value,color:brandColor.value,logoUrl:brandLogo.value,showPoweredBy:!hidePowered.checked})}
+async function provisionDomain(){const r=await api('/api/domains/provision','POST',{domain:customDomain.value});domainId=r.domainId}
+async function verifyDomain(){if(!domainId) throw new Error('provision domain first'); await api('/api/domains/'+domainId+'/verify','POST',{})}
+async function listDomains(){await api('/api/domains')}
+async function checkRemovePoweredByFeature(){await api('/api/features/access?feature=removePoweredBy')}
+</script>
+</body>
+</html>
