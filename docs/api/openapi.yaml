@@ -1,0 +1,64 @@
+openapi: 3.0.3
+info:
+  title: Creator Distribution Engine API
+  version: 1.3.0
+paths:
+  /api/plans:
+    get: { summary: List available SaaS plans and feature flags }
+  /api/billing/upgrade-plan:
+    post: { summary: Upgrade creator plan and feature access }
+  /api/features/access:
+    get: { summary: Check feature access for current plan }
+  /api/branding/settings:
+    post: { summary: Update white-label branding with plan enforcement }
+  /api/domains/provision:
+    post: { summary: Provision custom domain with DNS verification token }
+  /api/domains/{domainId}/verify:
+    post:
+      summary: Verify and activate custom domain
+      parameters: [{ in: path, name: domainId, required: true, schema: { type: string } }]
+  /api/domains:
+    get: { summary: List creator custom domains }
+
+  /api/funnel/templates:
+    get: { summary: List funnel templates }
+  /api/funnels:
+    post: { summary: Create funnel }
+    get: { summary: List funnels }
+  /f/{slug}:
+    get:
+      summary: Public funnel page
+      parameters: [{ in: path, name: slug, required: true, schema: { type: string } }]
+
+  /api/bio-link/templates:
+    get: { summary: List bio-link templates }
+  /api/bio-links:
+    post: { summary: Create bio-link page }
+  /b/{slug}:
+    get:
+      summary: Public bio-link page
+      parameters: [{ in: path, name: slug, required: true, schema: { type: string } }]
+
+  /api/traffic/track:
+    post: { summary: Track UTM/source/campaign visits }
+  /api/attribution/dashboard:
+    get: { summary: Attribution dashboard (source/campaign/medium/conversion) }
+
+  /api/segments/operators:
+    get: { summary: Get rule-builder fields/operators }
+  /api/segments/rules:
+    post: { summary: Create dynamic segment rule with combinator }
+  /api/segments/preview/{ruleId}:
+    get:
+      summary: Preview rule match audience
+      parameters: [{ in: path, name: ruleId, required: true, schema: { type: string } }]
+
+  /api/automations/workflows:
+    post: { summary: Create branching workflow }
+  /api/automations/workflows/{workflowId}/simulate:
+    post:
+      summary: Simulate workflow traversal with context
+      parameters: [{ in: path, name: workflowId, required: true, schema: { type: string } }]
+
+  /api/intelligence/best-send-time:
+    get: { summary: Recommend best send hour with confidence }
